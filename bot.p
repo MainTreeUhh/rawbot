@@ -37,7 +37,8 @@ async def upload(interaction: discord.Interaction, file: discord.Attachment, nam
         data["sha"] = check.json()["sha"]
     r = requests.put(f"https://api.github.com/repos/{USERNAME}/{REPO}/contents/{filename}", headers=headers, json=data)
     if r.status_code in [200, 201]:
-        await interaction.followup.send(f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{filename}")
+        raw = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{filename}"
+        await interaction.followup.send(f'loadstring(game:HttpGet("{raw}"))()')
     else:
         await interaction.followup.send("Upload failed!")
 
