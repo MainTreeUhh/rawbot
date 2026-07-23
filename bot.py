@@ -1,8 +1,9 @@
 import discord
 from discord import app_commands
-import os
+import os, base64, requests, aiohttp
 
-TOKEN = os.environ.get("DISCORD_TOKEN", "YOUR_TOKEN_HERE")
+TOKEN = os.environ.get("DISCORD_TOKEN")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USERNAME = "MainTreeUhh"
 REPO = "FreeUGCLimited"
 
@@ -20,10 +21,24 @@ class MyBot(discord.Client):
 
 bot = MyBot()
 
-@bot.tree.command(name="raw", description="Get raw GitHub link")
-@app_commands.describe(filename="Filename e.g. script.lua")
-async def raw(interaction: discord.Interaction, filename: str):
-    url = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{filename}"
-    await interaction.response.send_message(url)
+@bot.tree.command(name="upload", description="Upload file to GitHub and get raw link")
+@app_commands.describe(file="Pick your file")
+async def upload(interaction: discord.Interaction, file: discord.Attachment):
+    await interaction.response.defer()
+    async with aiohttp.ClientSession() as s:
+        async with s.get(file.url) as r:
+            content = await r.read()
+    filename = file.filename
+    encoded = base64.b64encode(content).decode()
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    check = requests.get(f"https://api.github.com/repos/{USERNAME}/{REPO}/contents/{filename}", headers=headers)
+    data = {"message": f"upload {filename}", "content": encoded}
+    if check.status_code == 200:
+        data["sha"] = check.json()["sha"]
+    r = requests.put(f"https://api.github.com/repos/{USERNAME}/{REPO}/contents/{filename}", headers=headers, json=data)
+    if r.status_code in [200, 201]:
+        await interaction.followup.send(f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{filename}")
+    else:
+        await interaction.followup.send("Upload failed!")
 
 bot.run(TOKEN)
