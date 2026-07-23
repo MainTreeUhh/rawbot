@@ -38,7 +38,8 @@ async def upload(interaction: discord.Interaction, file: discord.Attachment, nam
     r = requests.put(f"https://api.github.com/repos/{USERNAME}/{REPO}/contents/{filename}", headers=headers, json=data)
     if r.status_code in [200, 201]:
         raw = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/{filename}"
-        await interaction.followup.send(f'loadstring(game:HttpGet("{raw}"))()')
+        embed = discord.Embed(description=f"```lua\nloadstring(game:HttpGet(\"{raw}\"))()\n```", color=0x00ff00)
+        await interaction.followup.send(embed=embed)
     else:
         await interaction.followup.send("Upload failed!")
 
