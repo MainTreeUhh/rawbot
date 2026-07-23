@@ -22,13 +22,13 @@ class MyBot(discord.Client):
 bot = MyBot()
 
 @bot.tree.command(name="upload", description="Upload file to GitHub and get raw link")
-@app_commands.describe(file="Pick your file")
-async def upload(interaction: discord.Interaction, file: discord.Attachment):
+@app_commands.describe(file="Pick your file", name="Custom filename e.g. myscript.lua")
+async def upload(interaction: discord.Interaction, file: discord.Attachment, name: str = None):
     await interaction.response.defer()
     async with aiohttp.ClientSession() as s:
         async with s.get(file.url) as r:
             content = await r.read()
-    filename = file.filename
+    filename = name if name else file.filename
     encoded = base64.b64encode(content).decode()
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     check = requests.get(f"https://api.github.com/repos/{USERNAME}/{REPO}/contents/{filename}", headers=headers)
