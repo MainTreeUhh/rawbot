@@ -6,6 +6,7 @@ TOKEN = os.environ.get("DISCORD_TOKEN")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 USERNAME = "MainTreeUhh"
 REPO = "FreeUGCLimited"
+GUILD_ID = 1514583331793272962
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -13,7 +14,9 @@ class MyBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
 
     async def setup_hook(self):
-        await self.tree.sync()
+        guild = discord.Object(id=GUILD_ID)
+        self.tree.copy_global_to(guild=guild)
+        await self.tree.sync(guild=guild)
         print("Commands synced!")
 
     async def on_ready(self):
