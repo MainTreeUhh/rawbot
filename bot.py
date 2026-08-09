@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-import os, base64, requests, aiohttp
+import os, base64, requests, aiohttp, io
 
 TOKEN = os.environ.get("DISCORD_TOKEN")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
@@ -42,5 +42,18 @@ async def upload(interaction: discord.Interaction, file: discord.Attachment, nam
         await interaction.followup.send(embed=embed)
     else:
         await interaction.followup.send("Upload failed!")
+
+@bot.tree.command(name="convert", description="Convert content from a link to a file")
+@app_commands.describe(link="The raw URL to fetch", name="Filename e.g. script.lua")
+async def convert(interaction: discord.Interaction, link: str, name: str = "script.lua"):
+    await interaction.response.defer()
+    async with aiohttp.ClientSession() as s:
+        async with s.get(link) as r:
+            if r.status != 200:
+                await interaction.followup.send("Failed to fetch the link!")
+                return
+            content = await r.read()
+    file = discord.File(io.BytesIO(content), filename=name)
+    await interaction.followup.send(file=file)
 
 bot.run(TOKEN)
