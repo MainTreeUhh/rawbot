@@ -59,4 +59,14 @@ async def convert(interaction: discord.Interaction, link: str, name: str = "scri
     file = discord.File(io.BytesIO(content), filename=name)
     await interaction.followup.send(file=file)
 
+@bot.tree.command(name="permissions", description="Check all permissions a role has")
+@app_commands.describe(role="Pick a role to check")
+async def permissions(interaction: discord.Interaction, role: discord.Role):
+    enabled = [perm.replace("_", " ").title() for perm, value in role.permissions if value]
+    disabled = [perm.replace("_", " ").title() for perm, value in role.permissions if not value]
+    embed = discord.Embed(title=f"Permissions for {role.name}", color=role.color)
+    embed.add_field(name="✅ Allowed", value="\n".join(enabled) if enabled else "None", inline=True)
+    embed.add_field(name="❌ Denied", value="\n".join(disabled) if disabled else "None", inline=True)
+    await interaction.response.send_message(embed=embed)
+
 bot.run(TOKEN)
